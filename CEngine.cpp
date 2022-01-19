@@ -1,4 +1,4 @@
-#include "DemoApp.h"
+#include "CEngine.h"
 
 // Комментарий для компоновщика
 #pragma comment(lib,"d2d1.lib")

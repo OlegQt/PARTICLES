@@ -142,13 +142,13 @@
     <ClInclude Include="CArrow.h" />
     <ClInclude Include="CLogic.h" />
     <ClInclude Include="CMatrix.h" />
-    <ClInclude Include="DemoApp.h" />
+    <ClInclude Include="CEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CArrow.cpp" />
     <ClCompile Include="CLogic.cpp" />
     <ClCompile Include="CMatrix.cpp" />
-    <ClCompile Include="DemoApp.cpp" />
+    <ClCompile Include="CEngine.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
