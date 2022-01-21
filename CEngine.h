@@ -28,13 +28,12 @@ private:
 	HINSTANCE hInst;
 	HWND hWnd;
 
-	
-
 	ID2D1Factory* m_pDirect2dFactory;
 	ID2D1HwndRenderTarget* pRenderTarget;
 	ID2D1SolidColorBrush* pBrush;
 	ID2D1StrokeStyle* pStroke;
-	ID2D1Geometry* pGeom;
+	ID2D1GeometrySink* pSink;
+	ID2D1PathGeometry* m_pPathGeometry;
 
 	CLogic* pLogig;
 

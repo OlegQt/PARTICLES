@@ -6,7 +6,5 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Engine* ptrClass = new Engine(hInstance);
 	if (FAILED(ptrClass->Initialize())) return 0;
 	
-
-	
 	return 0;
 }

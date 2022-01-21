@@ -7,12 +7,16 @@ Engine::Engine(HINSTANCE h)
 {
 	hWnd = NULL;
 	this->hInst = h;
+
 	this->m_pDirect2dFactory = NULL;
+	this->pRenderTarget = NULL;
+	this->m_pPathGeometry = NULL;
 	this->pBrush = NULL;
 	this->pStroke = NULL;
-	this->pRenderTarget = NULL;
+	this->pSink = NULL;
 
 	this->pLogig = new CLogic;
+
 	this->btnA = { 10,10,20,20 };
 }
 Engine::~Engine()
@@ -42,10 +46,15 @@ Engine::~Engine()
 		this->pStroke->Release();
 		this->pStroke = nullptr;
 	}
-	if (this->pGeom)
+	if (this->m_pPathGeometry)
 	{
-		this->pGeom->Release();
-		this->pGeom = nullptr;
+		this->m_pPathGeometry->Release();
+		this->m_pPathGeometry = nullptr;
+	}
+	if (this->pSink)
+	{
+		this->pSink->Release();
+		this->pSink = nullptr;
 	}
 }
 
@@ -139,7 +148,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		float Xpos, Ypos;
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
-		this->pLogig->AddElement(Xpos, Ypos, 5.0f);
+		this->pLogig->AddArrow(Xpos, Ypos, 5.0f,5.0f);
 	}
 	if (message == WM_MOUSEMOVE)
 	{
@@ -147,14 +156,13 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		float Xpos, Ypos;
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
-		this->pLogig->MooveStar(Xpos, Ypos);
+		//this->pLogig->MooveStar(Xpos, Ypos);
 	}
 	if (message == WM_COMMAND)
 	{
 		if (wParam == ID_BUTTON_A)
 		{
 			this->btnA.pushed = !this->btnA.pushed;
-			this->pLogig->CreateStar();
 		}
 	}
 	if (message == WM_TIMER)
@@ -162,7 +170,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (wParam == TIMER1)
 		{
 			// do something1
-			this->pLogig->RotateStar();
+			//this->pLogig->RotateStar();
 		}
 	}
 	return S_OK;
@@ -186,7 +194,7 @@ HRESULT Engine::CreateDeviceIndependentResources()
 		0.0f // The dash offset.
 	);
 	hr = this->m_pDirect2dFactory->CreateStrokeStyle(strokeStyleProperties, NULL, 0, &pStroke);
-
+	if (SUCCEEDED(hr)) hr = this->m_pDirect2dFactory->CreatePathGeometry(&m_pPathGeometry);
 	return hr;
 }
 HRESULT Engine::CreateTarget()
@@ -208,6 +216,7 @@ HRESULT Engine::CreateTarget()
 	if (SUCCEEDED(hr) && !pBrush) hr = pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &this->pBrush);
 
 
+
 	return hr;
 
 }
@@ -215,56 +224,36 @@ HRESULT Engine::Render()
 {
 	HRESULT hr = this->CreateTarget();
 	if (FAILED(hr)) return hr;
+	if (!m_pPathGeometry) return S_FALSE;
+
 	this->pRenderTarget->BeginDraw();
 	this->pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	// Draw here
-	ID2D1GeometrySink* pSink = NULL;
-	ID2D1PathGeometry* m_pPathGeometry = NULL;
-	if (SUCCEEDED(hr))	hr = this->m_pDirect2dFactory->CreatePathGeometry(&m_pPathGeometry);
 
-	int inc = 0;
-	while (inc < pLogig->GetArraySize())
+	hr = m_pPathGeometry->Open(&pSink);
+	// Push geometry to sink
+	if (SUCCEEDED(hr))
 	{
-		CArrow* pArrow = pLogig->GetElement(inc);
-
-		this->pRenderTarget->DrawLine(D2D1::Point2F(pArrow->xPos, pArrow->yPos), D2D1::Point2F(pArrow->Vx, pArrow->Vy), this->pBrush, 1.0f, NULL);
-		//this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(pArrow->xPos, pArrow->yPos), pArrow->Diameter, pArrow->Diameter), this->pBrush, 1.0f);
-		this->m_pDirect2dFactory->CreatePathGeometry(&m_pPathGeometry);
-		hr = m_pPathGeometry->Open(&pSink);
-		pSink->BeginFigure(D2D1::Point2F(pArrow->xPos, pArrow->yPos), D2D1_FIGURE_BEGIN_FILLED);
-		pSink->AddLine(D2D1::Point2F(pArrow->Vx + 10, pArrow->Vy + 10));
-		pSink->AddLine(D2D1::Point2F(pArrow->Vx - 10, pArrow->Vy - 10));
+		pSink->BeginFigure(D2D1::Point2F(100, 100), D2D1_FIGURE_BEGIN_FILLED);
+		pSink->AddLine(D2D1::Point2F(200, 100));
+		pSink->AddLine(D2D1::Point2F(200, 150));
 		pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-		hr = pSink->Close();
-		//this->pRenderTarget->DrawGeometry(m_pPathGeometry, this->pBrush, 1.0f, NULL);
-		this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);
-		m_pPathGeometry->Release();
-		m_pPathGeometry = nullptr;
-		pSink->Release();
-		pSink = nullptr;
-		inc++;
-	}
-	//pSink = nullptr;
+		hr = pSink->Close();		
+		if (FAILED(hr)) return hr;		
+	}	
+	this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
 
-
-	//Render additional graphics
-	/*
-	if (this->btnA.pushed)
+	// GUI Drawings	
+	if (true)
 	{
-		this->pLogig->SolveInteraction(0, 0);
-		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Red));
-		this->pRenderTarget->DrawLine(D2D1::Point2F(50.0f, 30.0f), D2D1::Point2F(150.0f, 30.0f), this->pBrush, 2.0f, this->pStroke);
+		D2D1_RECT_F btnRect = { this->btnA.l,this->btnA.t,this->btnA.l + this->btnA.w,this->btnA.t + this->btnA.h };
+		if (this->btnA.pushed) { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::AliceBlue)); }
+		else { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Gray)); }
+		this->pRenderTarget->FillRectangle(btnRect, this->pBrush);
+		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+		this->pRenderTarget->DrawRectangle(btnRect, this->pBrush, 2.0f, NULL);
 	}
-	//*/
-
-	//Ниже рендер интерфейса	
-	D2D1_RECT_F btnRect = { this->btnA.l,this->btnA.t,this->btnA.l + this->btnA.w,this->btnA.t + this->btnA.h };
-	if (this->btnA.pushed) { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::AliceBlue)); }
-	else { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Gray)); }
-	this->pRenderTarget->FillRectangle(btnRect, this->pBrush);
-	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-	this->pRenderTarget->DrawRectangle(btnRect, this->pBrush, 2.0f, NULL);
 
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
@@ -291,5 +280,15 @@ void Engine::DiscardDeviceResources()
 	{
 		this->pRenderTarget->Release();
 		this->pRenderTarget = NULL;
+	}
+	if (this->m_pPathGeometry)
+	{
+		this->m_pPathGeometry->Release();
+		this->m_pPathGeometry = nullptr;
+	}
+	if (this->pSink)
+	{
+		this->pSink->Release();
+		this->pSink = nullptr;
 	}
 }

@@ -1,5 +1,5 @@
 #include "CArrow.h"
-// change
+
 CArrow::CArrow(float x, float y, float d)
 {
 	this->xPos = x;
