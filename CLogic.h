@@ -11,6 +11,7 @@ public:
 	CLogic();
 	~CLogic();
 	void AddArrow(float,float,float,float);
+	CArrow* PullArrow(int num);
 
 	unsigned int GetArraySize();
 private:
