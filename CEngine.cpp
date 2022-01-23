@@ -82,8 +82,6 @@ HRESULT Engine::Initialize()
 		if (!RegisterClassEx(&wcex)) return S_FALSE;
 	}
 	// Create the window.
-	//FLOAT dpiX, dpiY;
-	//m_pDirect2dFactory->GetDesktopDpi(&dpiX, &dpiY);
 	this->hWnd = CreateWindow(L"D2DDemoApp", L"app D2D", WS_OVERLAPPED | WS_SYSMENU, 0, 0, 500, 500, NULL, NULL, this->hInst, this);
 	if (!this->hWnd) return S_FALSE;
 	SetTimer(hWnd, TIMER1, 10, NULL);
@@ -148,7 +146,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		float Xpos, Ypos;
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
-		this->pLogig->AddArrow(Xpos, Ypos, 5.0f, 5.0f);
+		this->pLogig->AddArrow(Xpos, Ypos, 5.3f, 5.2f);
 	}
 	if (message == WM_MOUSEMOVE)
 	{
@@ -172,6 +170,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			// do something1
 			//this->pLogig->RotateStar();
+			this->pLogig->SolveArray();
 		}
 	}
 	return S_OK;
@@ -200,12 +199,13 @@ HRESULT Engine::CreateDeviceIndependentResources()
 }
 HRESULT Engine::CreateTarget()
 {
-	if (this->pRenderTarget) return S_FALSE; // Âûõîäèì, åñëè ñöåíà óæå ñîçäàíà
+	if (this->pRenderTarget) return S_FALSE; // If its already exists
 
-	// Ïîëó÷àåì ðàçìåðû îêíà
+	// making new one
 	RECT rc;
 	GetClientRect(this->hWnd, &rc);
 	D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
+	this->pLogig->SetScreenDpi(rc.right - rc.left, rc.bottom - rc.top);
 
 	// Create a Direct2D render target
 	HRESULT hr = m_pDirect2dFactory->CreateHwndRenderTarget(
@@ -247,7 +247,11 @@ HRESULT Engine::Render()
 		hr = pSink->Close();
 		pSink->Release();
 	}
+	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Azure));
 	this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
+
+	
+
 
 
 	// GUI Drawings	
@@ -270,10 +274,10 @@ HRESULT Engine::Render()
 			{
 				arrow = this->pLogig->PullArrow(iter);
 				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-				this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(arrow->xPos, arrow->yPos), 4.0f, 4.0f), this->pBrush, 2.0f, NULL);
-				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Cyan));
+				this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(arrow->xPos, arrow->yPos), arrow->Diameter, arrow->Diameter), this->pBrush, 2.0f, NULL);
+				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::DarkViolet));
 				this->pRenderTarget->DrawLine(D2D1::Point2F(arrow->xPos, arrow->yPos),
-					D2D1::Point2F(arrow->xPos + arrow->Vx, arrow->yPos + arrow->Vy),
+					D2D1::Point2F(arrow->xPos + arrow->Vx*3, arrow->yPos + arrow->Vy*3),
 					pBrush, 2.0f, pStroke);
 			}
 		}

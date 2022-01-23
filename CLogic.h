@@ -3,19 +3,26 @@
 #include "CMatrix.h"
 #include <vector>
 
-#define STARN 64
 
 class CLogic
 {
 public:
 	CLogic();
 	~CLogic();
+	// SETfunctions
 	void AddArrow(float,float,float,float);
-	CArrow* PullArrow(int num);
+	void SetScreenDpi(float, float);
 
+	// GET functions
+	CArrow* PullArrow(int num);
 	unsigned int GetArraySize();
+
+	// SOLVEfunctions
+	void SolveArray();
 private:
 	
-	std::vector<CArrow>array;
+	std::vector<CArrow>array; // Main data massive
+	float Width, Height; // Screen sizes in pixels
+	
 };
 

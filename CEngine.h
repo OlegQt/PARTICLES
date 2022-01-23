@@ -33,7 +33,9 @@ private:
 	ID2D1SolidColorBrush* pBrush;
 	ID2D1StrokeStyle* pStroke;
 	ID2D1GeometrySink* pSink;
+
 	ID2D1PathGeometry* m_pPathGeometry;
+
 
 	CLogic* pLogig;
 
