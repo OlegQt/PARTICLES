@@ -18,6 +18,8 @@ Engine::Engine(HINSTANCE h)
 	this->pLogig = new CLogic;
 
 	this->btnA = { 10,10,20,20 };
+
+	this->FPS = 0;
 }
 Engine::~Engine()
 {
@@ -56,6 +58,8 @@ Engine::~Engine()
 		this->pSink->Release();
 		this->pSink = nullptr;
 	}
+	KillTimer(hWnd, TIMER1);
+	KillTimer(hWnd, TIMER_FPS);
 }
 
 HRESULT Engine::Initialize()
@@ -85,6 +89,7 @@ HRESULT Engine::Initialize()
 	this->hWnd = CreateWindow(L"D2DDemoApp", L"app D2D", WS_OVERLAPPED | WS_SYSMENU, 0, 0, 500, 500, NULL, NULL, this->hInst, this);
 	if (!this->hWnd) return S_FALSE;
 	SetTimer(hWnd, TIMER1, 10, NULL);
+	SetTimer(hWnd, TIMER_FPS, 1000, NULL);
 	CreateWindow(L"Button", L"but", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
 		this->btnA.l, this->btnA.t, this->btnA.w, this->btnA.h,
 		this->hWnd, (HMENU)ID_BUTTON_A, this->hInst, NULL);
@@ -166,15 +171,12 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	if (message == WM_TIMER)
 	{
-		if (wParam == TIMER1)
-		{
-			// do something1
-			//this->pLogig->RotateStar();
-			this->pLogig->SolveArray();
-		}
+		if (wParam == TIMER1)this->pLogig->SolveArray();
+		if (wParam == TIMER_FPS) this->SetFPS();
 	}
 	return S_OK;
 }
+
 HRESULT Engine::CreateDeviceIndependentResources()
 {
 	HRESULT hr = S_OK;
@@ -235,22 +237,30 @@ HRESULT Engine::Render()
 	// m_pPathGeometry Ресурсно независим, поэтому открыть воронку Sink можно один раз!
 	if (SUCCEEDED(m_pPathGeometry->Open(&pSink)))
 	{
-		pSink->BeginFigure(D2D1::Point2F(100, 100), D2D1_FIGURE_BEGIN_FILLED);
-		pSink->AddLine(D2D1::Point2F(200, 100));
-		pSink->AddLine(D2D1::Point2F(200, 150));
-		pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-
-		pSink->BeginFigure(D2D1::Point2F(200, 100), D2D1_FIGURE_BEGIN_FILLED);
-		pSink->AddLine(D2D1::Point2F(300, 100));
-		pSink->AddLine(D2D1::Point2F(300, 150));
-		pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		for (int iter = 0; iter < FPS; iter++)
+		{
+			float dX = static_cast<float>(iter) * 5.0f;
+			pSink->BeginFigure(D2D1::Point2F(100 + dX, 10), D2D1_FIGURE_BEGIN_FILLED);
+			pSink->AddLine(D2D1::Point2F(100 + dX, 20));
+			pSink->AddLine(D2D1::Point2F(100 + dX, 10));
+			pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		}
 		hr = pSink->Close();
 		pSink->Release();
 	}
 	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Azure));
 	this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
 
-	
+	if (true)
+	{
+		for (int iter = 0; iter < FPS; iter++)
+		{
+			float dX = static_cast<float>(iter) * 5.0f + 100.0f;
+			this->pRenderTarget->DrawLine(D2D1::Point2F(dX,2),
+				D2D1::Point2F(dX,10),
+				pBrush, 2.0f, pStroke);
+		}
+	}
 
 
 
@@ -277,7 +287,7 @@ HRESULT Engine::Render()
 				this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(arrow->xPos, arrow->yPos), arrow->Diameter, arrow->Diameter), this->pBrush, 2.0f, NULL);
 				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::DarkViolet));
 				this->pRenderTarget->DrawLine(D2D1::Point2F(arrow->xPos, arrow->yPos),
-					D2D1::Point2F(arrow->xPos + arrow->Vx*3, arrow->yPos + arrow->Vy*3),
+					D2D1::Point2F(arrow->xPos + arrow->Vx * 3, arrow->yPos + arrow->Vy * 3),
 					pBrush, 2.0f, pStroke);
 			}
 		}
@@ -285,6 +295,7 @@ HRESULT Engine::Render()
 
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
+	this->FPSiter++;
 	if (hr == D2DERR_RECREATE_TARGET)
 	{
 		hr = S_OK;
@@ -319,4 +330,9 @@ void Engine::DiscardDeviceResources()
 		this->pSink->Release();
 		this->pSink = nullptr;
 	}
+}
+void Engine::SetFPS()
+{
+	this->FPS = FPSiter;
+	FPSiter = 0;
 }

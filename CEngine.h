@@ -7,6 +7,7 @@
 
 #define ID_BUTTON_A 22
 #define TIMER1 1001
+#define TIMER_FPS 1002
 
 class Engine
 {
@@ -27,23 +28,22 @@ public:
 private:
 	HINSTANCE hInst;
 	HWND hWnd;
+	int FPSiter, FPS;
 
 	ID2D1Factory* m_pDirect2dFactory;
 	ID2D1HwndRenderTarget* pRenderTarget;
 	ID2D1SolidColorBrush* pBrush;
 	ID2D1StrokeStyle* pStroke;
 	ID2D1GeometrySink* pSink;
-
 	ID2D1PathGeometry* m_pPathGeometry;
-
-
-	CLogic* pLogig;
 
 	// Initialize device-independent resources.
 	HRESULT CreateDeviceIndependentResources();
 	HRESULT CreateTarget();
 	HRESULT Render();
 	void DiscardDeviceResources();
+
+	CLogic* pLogig;
 
 	struct WndButton
 	{
@@ -55,4 +55,6 @@ private:
 		bool pushed;
 	};
 	WndButton btnA;
+
+	void SetFPS();
 };
