@@ -16,6 +16,7 @@ public:
 	// GET functions
 	CArrow* PullArrow(int num);
 	unsigned int GetArraySize();
+	std::pair<float, float> GetScreenRect();
 
 	// SOLVEfunctions
 	void SolveArray();

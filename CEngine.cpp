@@ -2,6 +2,7 @@
 
 // Комментарий для компоновщика
 #pragma comment(lib,"d2d1.lib")
+#pragma comment(lib,"Dwrite.lib")
 
 Engine::Engine(HINSTANCE h)
 {
@@ -185,7 +186,7 @@ HRESULT Engine::CreateDeviceIndependentResources()
 	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pDirect2dFactory);
 	if (FAILED(hr)) return hr;
 	// Create a Direct2D factory.
-	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &this->pDWriteFactory);
+	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWriteFactory));
 	if (FAILED(hr)) return hr;
 	// Create Stroke. Its independent too
 	D2D1_STROKE_STYLE_PROPERTIES strokeStyleProperties = D2D1::StrokeStyleProperties(
@@ -198,6 +199,17 @@ HRESULT Engine::CreateDeviceIndependentResources()
 		0.0f // The dash offset.
 	);
 	hr = this->m_pDirect2dFactory->CreateStrokeStyle(strokeStyleProperties, NULL, 0, &pStroke);
+	hr = pDWriteFactory->CreateTextFormat(
+		L"Arial",                // Font family name.
+		NULL,                       // Font collection (NULL sets it to use the system font collection).
+		DWRITE_FONT_WEIGHT_REGULAR,
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		12.0f,
+		L"en-us",
+		&pTxtFormat
+	);
+	if (FAILED(hr)) return hr;
 	if (SUCCEEDED(hr)) hr = this->m_pDirect2dFactory->CreatePathGeometry(&m_pPathGeometry);
 	return hr;
 }
@@ -246,6 +258,7 @@ HRESULT Engine::Render()
 		//pSink->Release();
 	//this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
 
+	this->RenderTxt(40, 10);
 	if (true)
 	{
 		for (int iter = 0; iter < FPS; iter++)
@@ -325,6 +338,24 @@ void Engine::DiscardDeviceResources()
 		this->pSink->Release();
 		this->pSink = nullptr;
 	}
+}
+HRESULT Engine::RenderTxt(float x, float y)
+{
+	if (this->pRenderTarget)
+	{
+		const wchar_t* txt = L"dd";
+		wchar_t buffer[_MAX_ITOSTR_BASE16_COUNT]; //_MAX_ITOSTR_BASE16_COUNT = 16
+		_itow_s(static_cast<int>(this->FPS), buffer, 10);
+		D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + 100.0f, y + 200.0f);
+		this->pRenderTarget->DrawText(
+			buffer,        // The string to render.
+			2,    // The string's length.
+			pTxtFormat,    // The text format.
+			layoutRect,       // The region of the window where the text will be rendered.
+			this->pBrush     // The brush used to draw the text.
+		);
+	}
+	return E_NOTIMPL;
 }
 void Engine::SetFPS()
 {

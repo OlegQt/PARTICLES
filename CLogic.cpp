@@ -26,6 +26,11 @@ unsigned int CLogic::GetArraySize()
 	return this->array.size();
 }
 
+std::pair<float, float> CLogic::GetScreenRect()
+{
+	return std::pair<float, float>(this->Width,this->Height);
+}
+
 void CLogic::SolveArray()
 {
 	if (!this->array.empty())
