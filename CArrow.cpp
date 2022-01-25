@@ -20,7 +20,7 @@ CArrow::CArrow(float xA, float yA, float xB, float yB)
 
 	this->Vx = xB;
 	this->Vy = yB;
-	this->Diameter = 10;
+	this->Diameter = 4;
 }
 CArrow::~CArrow()
 {

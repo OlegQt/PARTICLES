@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <d2d1.h>
 #include <d2d1helper.h>
+#include <dwrite.h>
 
 #include "CLogic.h"
 
@@ -31,6 +32,8 @@ private:
 	int FPSiter, FPS;
 
 	ID2D1Factory* m_pDirect2dFactory;
+	IDWriteFactory* pDWriteFactory;
+	IDWriteTextFormat* pTxtFormat;
 	ID2D1HwndRenderTarget* pRenderTarget;
 	ID2D1SolidColorBrush* pBrush;
 	ID2D1StrokeStyle* pStroke;

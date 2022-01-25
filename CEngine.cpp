@@ -151,7 +151,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		float Xpos, Ypos;
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
-		this->pLogig->AddArrow(Xpos, Ypos, 5.3f, 5.2f);
+		this->pLogig->AddArrow(Xpos, Ypos, 0.3f, 0.6f);
 	}
 	if (message == WM_MOUSEMOVE)
 	{
@@ -184,7 +184,9 @@ HRESULT Engine::CreateDeviceIndependentResources()
 	// Create a Direct2D factory.
 	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pDirect2dFactory);
 	if (FAILED(hr)) return hr;
-
+	// Create a Direct2D factory.
+	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &this->pDWriteFactory);
+	if (FAILED(hr)) return hr;
 	// Create Stroke. Its independent too
 	D2D1_STROKE_STYLE_PROPERTIES strokeStyleProperties = D2D1::StrokeStyleProperties(
 		D2D1_CAP_STYLE_ROUND,  // The start cap.
@@ -235,29 +237,22 @@ HRESULT Engine::Render()
 	// Draw here
 
 	// m_pPathGeometry Ресурсно независим, поэтому открыть воронку Sink можно один раз!
-	if (SUCCEEDED(m_pPathGeometry->Open(&pSink)))
-	{
-		for (int iter = 0; iter < FPS; iter++)
-		{
-			float dX = static_cast<float>(iter) * 5.0f;
-			pSink->BeginFigure(D2D1::Point2F(100 + dX, 10), D2D1_FIGURE_BEGIN_FILLED);
-			pSink->AddLine(D2D1::Point2F(100 + dX, 20));
-			pSink->AddLine(D2D1::Point2F(100 + dX, 10));
-			pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-		}
-		hr = pSink->Close();
-		pSink->Release();
-	}
-	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Azure));
-	this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
+	//if (SUCCEEDED(m_pPathGeometry->Open(&pSink)))
+	//pSink->BeginFigure(D2D1::Point2F(100 + dX, 10), D2D1_FIGURE_BEGIN_FILLED);
+	//pSink->AddLine(D2D1::Point2F(100 + dX, 20));
+	//pSink->AddLine(D2D1::Point2F(100 + dX, 10));
+	//pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+	//hr = pSink->Close();
+		//pSink->Release();
+	//this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
 
 	if (true)
 	{
 		for (int iter = 0; iter < FPS; iter++)
 		{
 			float dX = static_cast<float>(iter) * 5.0f + 100.0f;
-			this->pRenderTarget->DrawLine(D2D1::Point2F(dX,2),
-				D2D1::Point2F(dX,10),
+			this->pRenderTarget->DrawLine(D2D1::Point2F(dX, 2),
+				D2D1::Point2F(dX, 10),
 				pBrush, 2.0f, pStroke);
 		}
 	}
