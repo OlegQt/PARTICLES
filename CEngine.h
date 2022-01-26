@@ -38,6 +38,7 @@ private:
 	ID2D1HwndRenderTarget* pRenderTarget;
 	ID2D1SolidColorBrush* pBrush;
 	ID2D1StrokeStyle* pStroke;
+	// Ниже геометрия, для одноразовой отрисовки, наверное в ней нет смысла.
 	ID2D1GeometrySink* pSink;
 	ID2D1PathGeometry* m_pPathGeometry;
 
@@ -45,7 +46,7 @@ private:
 	HRESULT CreateDeviceIndependentResources();
 	HRESULT CreateTarget();
 	HRESULT Render();
-	HRESULT RenderTxt(float x, float y);
+	HRESULT RenderTxt(float x, float y, const wchar_t* txt, int number);
 	void DiscardDeviceResources();
 
 	CLogic* pLogig;

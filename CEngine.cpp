@@ -242,37 +242,12 @@ HRESULT Engine::Render()
 	HRESULT hr = this->CreateTarget();
 	if (FAILED(hr)) return hr;
 	if (!m_pPathGeometry) return S_FALSE;
-
 	this->pRenderTarget->BeginDraw();
 	this->pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	// Draw here
-
-	// m_pPathGeometry Ресурсно независим, поэтому открыть воронку Sink можно один раз!
-	//if (SUCCEEDED(m_pPathGeometry->Open(&pSink)))
-	//pSink->BeginFigure(D2D1::Point2F(100 + dX, 10), D2D1_FIGURE_BEGIN_FILLED);
-	//pSink->AddLine(D2D1::Point2F(100 + dX, 20));
-	//pSink->AddLine(D2D1::Point2F(100 + dX, 10));
-	//pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
-	//hr = pSink->Close();
-		//pSink->Release();
-	//this->pRenderTarget->FillGeometry(m_pPathGeometry, this->pBrush);  // Draw geometry
-
-	this->RenderTxt(40, 10);
-	if (true)
-	{
-		for (int iter = 0; iter < FPS; iter++)
-		{
-			float dX = static_cast<float>(iter) * 5.0f + 100.0f;
-			this->pRenderTarget->DrawLine(D2D1::Point2F(dX, 2),
-				D2D1::Point2F(dX, 10),
-				pBrush, 2.0f, pStroke);
-		}
-	}
-
-
-
-	// GUI Drawings	
+	this->RenderTxt(200, 5, L"txt", this->FPS);
+#pragma region Render GUI
 	if (true)
 	{
 		D2D1_RECT_F btnRect = { this->btnA.l,this->btnA.t,this->btnA.l + this->btnA.w,this->btnA.t + this->btnA.h };
@@ -282,7 +257,8 @@ HRESULT Engine::Render()
 		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
 		this->pRenderTarget->DrawRectangle(btnRect, this->pBrush, 2.0f, NULL);
 	}
-
+#pragma endregion Render GUI
+#pragma region RenderParticles
 	if (true)
 	{
 		CArrow* arrow = new CArrow();
@@ -300,7 +276,7 @@ HRESULT Engine::Render()
 			}
 		}
 	}
-
+#pragma endregion RenderParticles
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
 	this->FPSiter++;
@@ -338,14 +314,24 @@ void Engine::DiscardDeviceResources()
 		this->pSink->Release();
 		this->pSink = nullptr;
 	}
+	if (this->pDWriteFactory)
+	{
+		pDWriteFactory->Release();
+		pDWriteFactory = nullptr;
+	}
+	if (this->pTxtFormat)
+	{
+		pTxtFormat->Release();
+		pTxtFormat = nullptr;
+	}
 }
-HRESULT Engine::RenderTxt(float x, float y)
+HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 {
 	if (this->pRenderTarget)
 	{
-		const wchar_t* txt = L"dd";
+
 		wchar_t buffer[_MAX_ITOSTR_BASE16_COUNT]; //_MAX_ITOSTR_BASE16_COUNT = 16
-		_itow_s(static_cast<int>(this->FPS), buffer, 10);
+		_itow_s(static_cast<int>(Num), buffer, 10);
 		D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + 100.0f, y + 200.0f);
 		this->pRenderTarget->DrawText(
 			buffer,        // The string to render.
