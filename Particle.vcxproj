@@ -143,12 +143,14 @@
     <ClInclude Include="CLogic.h" />
     <ClInclude Include="CMatrix.h" />
     <ClInclude Include="CEngine.h" />
+    <ClInclude Include="CQuadTree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CArrow.cpp" />
     <ClCompile Include="CLogic.cpp" />
     <ClCompile Include="CMatrix.cpp" />
     <ClCompile Include="CEngine.cpp" />
+    <ClCompile Include="CQuadTree.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

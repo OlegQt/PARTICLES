@@ -19,7 +19,6 @@ Engine::Engine(HINSTANCE h)
 	this->pLogig = new CLogic;
 
 	this->btnA = { 10,10,20,20 };
-
 	this->FPS = 0;
 }
 Engine::~Engine()
@@ -172,7 +171,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	if (message == WM_TIMER)
 	{
-		if (wParam == TIMER1)this->pLogig->SolveArray();
+		if (wParam == TIMER1);// this->pLogig->SolveArray();
 		if (wParam == TIMER_FPS) this->SetFPS();
 	}
 	return S_OK;
@@ -211,7 +210,8 @@ HRESULT Engine::CreateDeviceIndependentResources()
 	);
 	if (FAILED(hr)) return hr;
 	if (SUCCEEDED(hr)) hr = this->m_pDirect2dFactory->CreatePathGeometry(&m_pPathGeometry);
-	return hr;
+
+	
 }
 HRESULT Engine::CreateTarget()
 {
@@ -259,7 +259,8 @@ HRESULT Engine::Render()
 	}
 #pragma endregion Render GUI
 #pragma region RenderParticles
-	if (true)
+	this->RenderTreeBorders(this->pLogig->GetTree());
+	if (false)
 	{
 		CArrow* arrow = new CArrow();
 		if (this->pLogig->GetArraySize())
@@ -340,6 +341,28 @@ HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 			layoutRect,       // The region of the window where the text will be rendered.
 			this->pBrush     // The brush used to draw the text.
 		);
+	}
+	return E_NOTIMPL;
+}
+HRESULT Engine::RenderTreeBorders(CQuadTree * pTree)
+{
+	if (pTree->IsSubDevided())
+	{
+		RenderTreeBorders(pTree->GetChild(0));
+		RenderTreeBorders(pTree->GetChild(1));
+		RenderTreeBorders(pTree->GetChild(2));
+		RenderTreeBorders(pTree->GetChild(3));
+	}
+	else
+	{
+		RECT Br = pTree->GetBorder();
+		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Coral));
+		this->pRenderTarget->DrawRectangle(D2D1::Rect(
+			static_cast<int>(Br.left), 
+			static_cast<int>(Br.top), 
+			static_cast<int>(Br.right), 
+			static_cast<int>(Br.bottom)), 
+			this->pBrush, 3.0f, NULL);
 	}
 	return E_NOTIMPL;
 }
