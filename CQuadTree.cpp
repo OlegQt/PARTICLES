@@ -88,7 +88,7 @@ bool CQuadTree::AddElement(CArrow* pAr)
 			// subdivede
 			this->Subdivide();
 			this->AddElement(pAr);
-			
+
 			// Transfer all elements to this children leafs
 			for (int i = 0; i < Load; i++)
 			{
@@ -100,27 +100,39 @@ bool CQuadTree::AddElement(CArrow* pAr)
 		}
 	}
 }
+void CQuadTree::RemoveElement(short num)
+{
+	if (this->Load > 1)
+	{
+		//Убираем пустой элемент массива (смещаем элементы влево)
+		for (int i = num; i < this->Load - 1; i++)
+		{
+			this->ar[i] = this->ar[i + 1];
+		}
+		this->ar[Load - 1] = nullptr; // Delete last element
+		this->Load--;
+	}
+	else if (this->Load == 1)
+	{
+		this->ar[0] = nullptr;
+		this->Load--;
+	}
+
+}
 
 bool CQuadTree::Solve()
 {
-	bool flag = true;
-	if (this->IsSubDevided())
+	for (int i = 0; i < this->Load; i++)
 	{
-		this->leaf[0]->Solve();
-		this->leaf[1]->Solve();
-		this->leaf[2]->Solve();
-		this->leaf[3]->Solve();
-	}
-	else
-	{
-		CArrow* pAr = nullptr;
-		for (int i = 0; i < this->Load; i++)
+		CArrow * pA = this->GetArrow(i);
+		if (!this->IsInside(pA->xPos, pA->yPos))
 		{
-			pAr = this->ar[i];
-			pAr->Vx++;
+			this->AddElement(pA);
+			this->AddElement(new CArrow(10.0f,20.0f,8.0f,8.0f)) ;
+			this->RemoveElement(static_cast<short>(i));
 		}
 	}
-	return false;
+	return true;
 }
 bool CQuadTree::SetBorder(RECT rect)
 {
@@ -135,27 +147,27 @@ bool CQuadTree::Subdivide()
 	// TOP LEFT
 	halfBorder.left = border.left;
 	halfBorder.top = border.top;
-	halfBorder.right = border.left+hW;
-	halfBorder.bottom =border.top+hH;
+	halfBorder.right = border.left + hW;
+	halfBorder.bottom = border.top + hH;
 	this->leaf[0] = new CQuadTree();
 	this->leaf[0]->SetBorder(halfBorder);
 	// TOP RIGHT
 	halfBorder.left = border.left + hW;
 	halfBorder.top = border.top;
 	halfBorder.right = border.right;
-	halfBorder.bottom = border.top+hH;
+	halfBorder.bottom = border.top + hH;
 	this->leaf[1] = new CQuadTree();
 	this->leaf[1]->SetBorder(halfBorder);
 	// BOTTOM LEFT
 	halfBorder.left = border.left;
 	halfBorder.top = border.top + hH;
-	halfBorder.right = border.left+hW;
+	halfBorder.right = border.left + hW;
 	halfBorder.bottom = border.bottom;
 	this->leaf[2] = new CQuadTree();
 	this->leaf[2]->SetBorder(halfBorder);
 	// BOTTOM RIGHT
-	halfBorder.left = border.left+hW;
-	halfBorder.top = border.top+hH;
+	halfBorder.left = border.left + hW;
+	halfBorder.top = border.top + hH;
 	halfBorder.right = border.right;
 	halfBorder.bottom = border.bottom;
 	this->leaf[3] = new CQuadTree();
@@ -175,4 +187,8 @@ CQuadTree* CQuadTree::GetChild(short n)
 int CQuadTree::GetLoad()
 {
 	return this->Load;
+}
+CArrow* CQuadTree::GetArrow(int num)
+{
+	return this->ar[num];
 }

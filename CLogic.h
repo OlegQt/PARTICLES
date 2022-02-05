@@ -10,24 +10,20 @@ public:
 	CLogic();
 	~CLogic();
 	// SETfunctions
-	void AddArrow(float,float,float,float);
+	void AddElement(float, float, float, float);
 	void SetScreenDpi(float, float);
 
 	// GET functions
-	CArrow* PullArrow(int num);
-	unsigned int GetArraySize();
-	std::pair<float, float> GetScreenRect();
-	CQuadTree * GetTree();
+	CQuadTree* GetTree();
 
 	// SOLVEfunctions
-	void SolveArray();
+	void TreeCalculation(CQuadTree*);
 private:
-	
-	std::vector<CArrow>array; // Main data massive
+
 	float Width, Height; // Screen sizes in pixels
-	CQuadTree * QTree;
+	CQuadTree* QTree;
 
 	int num = 0;
-	
+
 };
 

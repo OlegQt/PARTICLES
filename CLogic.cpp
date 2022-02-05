@@ -5,19 +5,12 @@ CLogic::CLogic()
 }
 CLogic::~CLogic()
 {
-	this->array.clear();
+	this->QTree->~CQuadTree();
 }
 
-void CLogic::AddArrow(float xA, float yA, float xB, float yB)
+void CLogic::AddElement(float xA, float yA, float xB, float yB)
 {
-	//this->array.push_back(CArrow(xA, yA, xB, yB));
-	//this->QTree->AddElement(&array.back());
-	if (num == 10)
-	{
-		int y = 0;
-	}
 	this->QTree->AddElement(new CArrow(xA, yA, xB, yB));
-	num++;
 }
 void CLogic::SetScreenDpi(float w, float h)
 {
@@ -28,59 +21,31 @@ void CLogic::SetScreenDpi(float w, float h)
 	this->QTree->SetBorder(rect);
 }
 
-CArrow* CLogic::PullArrow(int num)
-{	
-	return &this->array.at(num);
-	//return nullptr;
-}
-
-unsigned int CLogic::GetArraySize()
-{
-	return this->array.size();
-}
-std::pair<float, float> CLogic::GetScreenRect()
-{
-	return std::pair<float, float>(this->Width,this->Height);
-}
-
 CQuadTree* CLogic::GetTree()
 {
 	return this->QTree;
 }
-
-void CLogic::SolveArray()
+void CLogic::TreeCalculation(CQuadTree* pT)
 {
-	if (false)
+	CArrow* pA = nullptr;
+	int i;
+	if (pT->IsSubDevided())
 	{
-		if (!this->array.empty())
+		for (i = 0; i < 4; i++)
 		{
-			CArrow* pAr = nullptr;
-			for (int iter = 0; iter < array.size(); iter++)
-			{
-				pAr = &array.at(iter);
-				pAr->xPos += pAr->Vx;
-				pAr->yPos += pAr->Vy;
-				// float dV = 0.5f;
-
-				// ѕровер€ем выход шарика за границы и отражаем
-				if (pAr->xPos < 0 + pAr->Diameter)
-				{
-					pAr->Vx *= -1;
-				}
-				else if (pAr->xPos > Width - pAr->Diameter)
-				{
-					pAr->Vx *= -1;
-				}
-
-				else if (pAr->yPos < 0 + pAr->Diameter)
-				{
-					pAr->Vy *= -1;
-				}
-				else if (pAr->yPos > Height - pAr->Diameter)
-				{
-					pAr->Vy *= -1;
-				}
-			}
+			TreeCalculation(pT->GetChild(i));
 		}
+	}
+	else
+	{
+		for (i = 0; i < pT->GetLoad(); i++)
+		{
+			pA = pT->GetArrow(i);
+			pA->xPos += pA->Vx;
+		}
+		// Chek if Some elements get out from node
+		pT->Solve();
+		// Chek if Elements close to borders onle if Node touches the screen border		
+
 	}
 }

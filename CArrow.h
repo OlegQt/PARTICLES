@@ -16,15 +16,12 @@ public:
 	CArrow();
 	~CArrow();
 
+public:
+	void MakeMovement();
+
 	float xPos, yPos,Diameter;
 	float Vx, Vy, Vz;
 	float Mass;
-
-	typedef struct vector
-	{
-		float pos;
-	};
-	vector pos = { 0.1f };
 
 };
 

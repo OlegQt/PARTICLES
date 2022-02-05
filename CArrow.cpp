@@ -26,3 +26,9 @@ CArrow::~CArrow()
 {
 }
 
+void CArrow::MakeMovement()
+{
+	xPos += Vx;
+	yPos += Vy;
+}
+
