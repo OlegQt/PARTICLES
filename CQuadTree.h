@@ -18,9 +18,9 @@ public:
 	bool SetBorder(RECT);
 	bool Subdivide();
 
-	RECT GetBorder();
-	CQuadTree * GetChild(short);
-	
+	RECT GetBorder(); // Return RECT structure for this Qtree element
+	CQuadTree * GetChild(short); // Return pointer to Qtree child (TL,TR,BL,BR)
+	int GetLoad(); // Return ammount of particles inside this Qtree node
 	
 private:
 	CQuadTree* leaf[4];

@@ -47,7 +47,8 @@ private:
 	HRESULT CreateTarget();
 	HRESULT Render();
 	HRESULT RenderTxt(float x, float y, const wchar_t* txt, int number);
-	HRESULT RenderTreeBorders(CQuadTree * pTree);
+	HRESULT RenderTreeBorders(CQuadTree * );
+	HRESULT RenderGui();
 
 	void DiscardDeviceResources();
 

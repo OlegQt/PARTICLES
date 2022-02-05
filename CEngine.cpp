@@ -239,6 +239,7 @@ HRESULT Engine::CreateTarget()
 }
 HRESULT Engine::Render()
 {
+	this->FPSiter++;
 	HRESULT hr = this->CreateTarget();
 	if (FAILED(hr)) return hr;
 	if (!m_pPathGeometry) return S_FALSE;
@@ -247,40 +248,10 @@ HRESULT Engine::Render()
 	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	// Draw here
 	this->RenderTxt(200, 5, L"txt", this->FPS);
-#pragma region Render GUI
-	if (true)
-	{
-		D2D1_RECT_F btnRect = { this->btnA.l,this->btnA.t,this->btnA.l + this->btnA.w,this->btnA.t + this->btnA.h };
-		if (this->btnA.pushed) { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::AliceBlue)); }
-		else { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Gray)); }
-		this->pRenderTarget->FillRectangle(btnRect, this->pBrush);
-		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-		this->pRenderTarget->DrawRectangle(btnRect, this->pBrush, 2.0f, NULL);
-	}
-#pragma endregion Render GUI
-#pragma region RenderParticles
 	this->RenderTreeBorders(this->pLogig->GetTree());
-	if (false)
-	{
-		CArrow* arrow = new CArrow();
-		if (this->pLogig->GetArraySize())
-		{
-			for (int iter = 0; iter < pLogig->GetArraySize(); iter++)
-			{
-				arrow = this->pLogig->PullArrow(iter);
-				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-				this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(arrow->xPos, arrow->yPos), arrow->Diameter, arrow->Diameter), this->pBrush, 2.0f, NULL);
-				this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::DarkViolet));
-				this->pRenderTarget->DrawLine(D2D1::Point2F(arrow->xPos, arrow->yPos),
-					D2D1::Point2F(arrow->xPos + arrow->Vx * 3, arrow->yPos + arrow->Vy * 3),
-					pBrush, 2.0f, pStroke);
-			}
-		}
-	}
-#pragma endregion RenderParticles
+	this->RenderGui();
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
-	this->FPSiter++;
 	if (hr == D2DERR_RECREATE_TARGET)
 	{
 		hr = S_OK;
@@ -288,6 +259,7 @@ HRESULT Engine::Render()
 	}
 	return S_OK;
 }
+
 void Engine::DiscardDeviceResources()
 {
 	if (this->m_pDirect2dFactory)
@@ -326,6 +298,8 @@ void Engine::DiscardDeviceResources()
 		pTxtFormat = nullptr;
 	}
 }
+
+
 HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 {
 	if (this->pRenderTarget)
@@ -343,6 +317,16 @@ HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 		);
 	}
 	return E_NOTIMPL;
+}
+HRESULT Engine::RenderGui()
+{
+	D2D1_RECT_F btnRect = { this->btnA.l,this->btnA.t,this->btnA.l + this->btnA.w,this->btnA.t + this->btnA.h };
+	if (this->btnA.pushed) { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::AliceBlue)); }
+	else { this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Gray)); }
+	this->pRenderTarget->FillRectangle(btnRect, this->pBrush);
+	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+	this->pRenderTarget->DrawRectangle(btnRect, this->pBrush, 2.0f, NULL);
+	return S_OK;
 }
 HRESULT Engine::RenderTreeBorders(CQuadTree * pTree)
 {
@@ -363,8 +347,10 @@ HRESULT Engine::RenderTreeBorders(CQuadTree * pTree)
 			static_cast<int>(Br.right), 
 			static_cast<int>(Br.bottom)), 
 			this->pBrush, 3.0f, NULL);
+		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+		this->RenderTxt(Br.left+4, Br.top+4, L"txt", pTree->GetLoad());
 	}
-	return E_NOTIMPL;
+	return S_OK;
 }
 void Engine::SetFPS()
 {

@@ -70,11 +70,6 @@ bool CQuadTree::AddElement(CArrow* pAr)
 			//MessageBox(NULL, L"BR", L"click", NULL);
 			return true;
 		}
-		//this->leaf[0]->AddElement(pAr);
-		//this->leaf[1]->AddElement(pAr);
-		//this->leaf[2]->AddElement(pAr);
-		//this->leaf[3]->AddElement(pAr);
-
 	}
 	else
 	{
@@ -175,4 +170,9 @@ RECT CQuadTree::GetBorder()
 CQuadTree* CQuadTree::GetChild(short n)
 {
 	return this->leaf[n];
+}
+
+int CQuadTree::GetLoad()
+{
+	return this->Load;
 }
