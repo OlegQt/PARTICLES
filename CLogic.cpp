@@ -35,6 +35,8 @@ void CLogic::TreeCalculation(CQuadTree* pT)
 		{
 			TreeCalculation(pT->GetChild(i));
 		}
+		// Проверка если в узле дерева все листы пусты
+		// Необходимо превратить узел в лист (вызвать соотвествующую функцию из класса Qtree)
 	}
 	else
 	{
@@ -44,7 +46,7 @@ void CLogic::TreeCalculation(CQuadTree* pT)
 			pA->xPos += pA->Vx;
 		}
 		// Chek if Some elements get out from node
-		pT->Solve();
+		pT->CheckTreeLeaf(this->QTree);
 		// Chek if Elements close to borders onle if Node touches the screen border		
 
 	}

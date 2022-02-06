@@ -37,7 +37,7 @@ bool CQuadTree::IsSubDevided()
 	}
 	else return false;
 }
-bool CQuadTree::IsInside(int x, int y)
+bool CQuadTree::IsInside(float x, float y)
 {
 	if (x > border.left && x < border.right)
 	{
@@ -120,16 +120,21 @@ void CQuadTree::RemoveElement(short num)
 
 }
 
-bool CQuadTree::Solve()
+bool CQuadTree::CheckTreeLeaf(CQuadTree* parent)
 {
+	// Проверяем все элементы внутри листа дерева
+	// В случае, если элемент, выходит за пределы данного листа
+	// производим удаление его из массива листа и затем вызываем
+	// функцию добавления элемента в главное родительское дерево
+
 	for (int i = 0; i < this->Load; i++)
 	{
 		CArrow * pA = this->GetArrow(i);
 		if (!this->IsInside(pA->xPos, pA->yPos))
 		{
-			this->AddElement(pA);
-			this->AddElement(new CArrow(10.0f,20.0f,8.0f,8.0f)) ;
+			//parent->AddElement(pA);
 			this->RemoveElement(static_cast<short>(i));
+			parent->AddElement(pA);
 		}
 	}
 	return true;

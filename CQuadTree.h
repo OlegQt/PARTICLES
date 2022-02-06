@@ -11,10 +11,10 @@ public:
 	~CQuadTree();
 
 	bool IsSubDevided();
-	bool IsInside(int x, int y);
+	bool IsInside(float x, float y);
 
 	bool AddElement(CArrow * pAr);
-	bool Solve();
+	bool CheckTreeLeaf(CQuadTree * parent); // Needed to send Parent Qtree as a parametr
 	bool SetBorder(RECT);
 	bool Subdivide();
 	void RemoveElement(short);
