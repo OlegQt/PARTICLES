@@ -30,7 +30,7 @@ public:
 private:
 	HINSTANCE hInst;
 	HWND hWnd;
-	int FPSiter, FPS;
+	int FPSiter, FPS, Quantity;
 
 	ID2D1Factory* m_pDirect2dFactory;
 	IDWriteFactory* pDWriteFactory;
@@ -47,9 +47,9 @@ private:
 	HRESULT CreateTarget();
 	HRESULT Render();
 	HRESULT RenderTxt(float x, float y, const wchar_t* txt, int number);
-	HRESULT RenderTreeBorder(CQuadTree * );
 	HRESULT RenderGui();
-
+	HRESULT RenderFPS();
+	HRESULT RenderTreeBorder(CQuadTree*);
 	void DiscardDeviceResources();
 
 	CLogic* pLogig;

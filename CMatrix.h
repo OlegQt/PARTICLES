@@ -12,5 +12,6 @@ class CMatrix
 public:
 	static void  rotate(CArrow *,float);
 	static void sum(CArrow *, float x, float y);
+	static float Distance(float, float, float, float);
 };
 

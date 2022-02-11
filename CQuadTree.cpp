@@ -50,54 +50,84 @@ bool CQuadTree::IsInside(float x, float y)
 	else return false;
 
 }
+
+bool CQuadTree::PutElementInLeaf(CArrow* pAr, bool check)
+{
+	if (!this->IsInside(pAr->xPos, pAr->yPos)) return false;
+	else
+	{
+		if (check)
+		{
+			for (int i = 0; i < Load; i++)
+			{
+				if (CMatrix::Distance(pAr->xPos, pAr->yPos, ar[i]->xPos, ar[i]->yPos) < pAr->Diameter * 2) return false;
+			}
+			ar[Load] = pAr; // Push element to array end
+			this->Load++; // Increase element number		
+			return true;
+		}
+		else
+		{
+
+			ar[Load] = pAr; // Push element to array end
+			this->Load++; // Increase element number		
+			return true;
+		}
+	}
+}
 bool CQuadTree::AddElement(CArrow* pAr)
 {
 	if (this->IsSubDevided())
 	{
-		if (this->leaf[0]->AddElement(pAr)) {
-			//MessageBox(NULL, L"TL", L"click", NULL);
-			return true;
-		}
-		if (this->leaf[1]->AddElement(pAr)) {
-			//MessageBox(NULL, L"TR", L"click", NULL);
-			return true;
-		}
-		if (this->leaf[2]->AddElement(pAr)) {
-			//MessageBox(NULL, L"BL", L"click", NULL);
-			return true;
-		}
-		if (this->leaf[3]->AddElement(pAr)) {
-			//MessageBox(NULL, L"BR", L"click", NULL);
-			return true;
-		}
+		if (this->leaf[0]->AddElement(pAr)) return true;
+		if (this->leaf[1]->AddElement(pAr)) return true;
+		if (this->leaf[2]->AddElement(pAr)) return true;
+		if (this->leaf[3]->AddElement(pAr))	return true;
 	}
 	else
 	{
-		if (this->Load < 4) // < MAXLOAD
-		{
-			// If position inside rectangle add to array
-			if (IsInside(pAr->xPos, pAr->yPos))
-			{
-				this->Load++;
-				ar[Load - 1] = pAr;
-				return true;
-			}
-		}
+		if (this->Load < 4) this->PutElementInLeaf(pAr, true);
 		else
 		{
-			// subdivede
-			this->Subdivide();
-			this->AddElement(pAr);
-
-			// Transfer all elements to this children leafs
-			for (int i = 0; i < Load; i++)
-			{
-				this->AddElement(this->ar[i]);
-				this->ar[i] = nullptr;
-			}
-			this->Load = 0;
-			return false;
+			if (!this->Subdivide()) return false;
+			this->PutElementInLeaf(pAr, true);
+			this->TransferAlltoLeafs(true);
 		}
+		return false;
+	}
+}
+bool CQuadTree::RelocateElement(CArrow* pAr)
+{
+	if (this->IsSubDevided())
+	{
+		if (this->leaf[0]->RelocateElement(pAr)) return true;
+		if (this->leaf[1]->RelocateElement(pAr)) return true;
+		if (this->leaf[2]->RelocateElement(pAr)) return true;
+		if (this->leaf[3]->RelocateElement(pAr)) return true;
+	}
+	else
+	{
+		if (this->Load < 4) this->PutElementInLeaf(pAr, false);
+		else
+		{
+			if (this->Subdivide())
+			{
+				this->RelocateElement(pAr);
+				// Transfer all elements to this children leafs
+				for (int i = 0; i < Load; i++)
+				{
+					this->RelocateElement(this->ar[i]); // Add element to children leaf
+					this->ar[i] = nullptr; // Remoove element from this node
+				}
+				this->Load = 0;
+			}
+			else
+			{
+				//MessageBeep(10);
+				return false;
+			}
+		}
+		return false;
 	}
 }
 void CQuadTree::RemoveElement(short num)
@@ -119,6 +149,17 @@ void CQuadTree::RemoveElement(short num)
 	}
 
 }
+bool CQuadTree::TransferAlltoLeafs(bool n)
+{
+	while (this->Load)
+	{
+		this->RelocateElement(this->ar[Load - 1]);
+		this->ar[Load - 1] = nullptr;
+		Load--;
+	}
+	return true;
+}
+
 
 bool CQuadTree::CheckTreeLeaf(CQuadTree* parent)
 {
@@ -129,15 +170,41 @@ bool CQuadTree::CheckTreeLeaf(CQuadTree* parent)
 
 	for (int i = 0; i < this->Load; i++)
 	{
-		CArrow * pA = this->GetArrow(i);
+		CArrow* pA = this->GetArrow(i);
 		if (!this->IsInside(pA->xPos, pA->yPos))
 		{
 			//parent->AddElement(pA);
 			this->RemoveElement(static_cast<short>(i));
-			parent->AddElement(pA);
+			if (parent->RelocateElement(pA)) return true;
+			//else MessageBeep(10);
 		}
 	}
 	return true;
+}
+bool CQuadTree::MergeLeafs()
+{
+	//if (!this->IsSubDevided()) return false;
+	int LOAD = 0;
+	bool flag = true;
+
+	// Chek all children leafes
+	// In case all 4 children are not subdivided 
+	// and there are no elements inside them
+	// Merge them into one leaf 
+	for (int i = 0; i < 4; i++)
+	{
+		LOAD += this->leaf[i]->Load;
+		if (this->leaf[i]->IsSubDevided()) flag = false;
+	}
+	if (LOAD == 0 && flag)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			this->leaf[i] = nullptr;
+		}
+		return true;
+	}
+	return false;
 }
 bool CQuadTree::SetBorder(RECT rect)
 {
@@ -149,35 +216,38 @@ bool CQuadTree::Subdivide()
 	RECT halfBorder{ 0,0,0,0 };
 	long hW = (border.right - border.left) / 2;
 	long hH = (border.bottom - border.top) / 2;
-	// TOP LEFT
-	halfBorder.left = border.left;
-	halfBorder.top = border.top;
-	halfBorder.right = border.left + hW;
-	halfBorder.bottom = border.top + hH;
-	this->leaf[0] = new CQuadTree();
-	this->leaf[0]->SetBorder(halfBorder);
-	// TOP RIGHT
-	halfBorder.left = border.left + hW;
-	halfBorder.top = border.top;
-	halfBorder.right = border.right;
-	halfBorder.bottom = border.top + hH;
-	this->leaf[1] = new CQuadTree();
-	this->leaf[1]->SetBorder(halfBorder);
-	// BOTTOM LEFT
-	halfBorder.left = border.left;
-	halfBorder.top = border.top + hH;
-	halfBorder.right = border.left + hW;
-	halfBorder.bottom = border.bottom;
-	this->leaf[2] = new CQuadTree();
-	this->leaf[2]->SetBorder(halfBorder);
-	// BOTTOM RIGHT
-	halfBorder.left = border.left + hW;
-	halfBorder.top = border.top + hH;
-	halfBorder.right = border.right;
-	halfBorder.bottom = border.bottom;
-	this->leaf[3] = new CQuadTree();
-	this->leaf[3]->SetBorder(halfBorder);
-	return false;
+	if (hW < 4) return false;
+	else {
+		// TOP LEFT
+		halfBorder.left = border.left;
+		halfBorder.top = border.top;
+		halfBorder.right = border.left + hW;
+		halfBorder.bottom = border.top + hH;
+		this->leaf[0] = new CQuadTree();
+		this->leaf[0]->SetBorder(halfBorder);
+		// TOP RIGHT
+		halfBorder.left = border.left + hW;
+		halfBorder.top = border.top;
+		halfBorder.right = border.right;
+		halfBorder.bottom = border.top + hH;
+		this->leaf[1] = new CQuadTree();
+		this->leaf[1]->SetBorder(halfBorder);
+		// BOTTOM LEFT
+		halfBorder.left = border.left;
+		halfBorder.top = border.top + hH;
+		halfBorder.right = border.left + hW;
+		halfBorder.bottom = border.bottom;
+		this->leaf[2] = new CQuadTree();
+		this->leaf[2]->SetBorder(halfBorder);
+		// BOTTOM RIGHT
+		halfBorder.left = border.left + hW;
+		halfBorder.top = border.top + hH;
+		halfBorder.right = border.right;
+		halfBorder.bottom = border.bottom;
+		this->leaf[3] = new CQuadTree();
+		this->leaf[3]->SetBorder(halfBorder);
+		return true;
+	}
 }
 
 RECT CQuadTree::GetBorder()

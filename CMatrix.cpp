@@ -23,11 +23,15 @@ void CMatrix::rotate(CArrow* pArrow, float angle)
 	pArrow->Vy = y;
 
 }
-
 void  CMatrix::sum(CArrow* pArrow, float x, float y)
 {
 	pArrow->xPos += x;
 	pArrow->yPos += y;
 	pArrow->Vx += x;
 	pArrow->Vy += y;
+}
+float CMatrix::Distance(float xA, float yA, float xB, float yB)
+{
+	//float t=sqrtf(pow(xB - xA, 2)+ pow(yB - yA, 2))
+	return sqrtf(pow(xB - xA, 2) + pow(yB - yA, 2));
 }

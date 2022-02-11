@@ -117,7 +117,6 @@ void Engine::RunMessageLoop()
 			this->Render();
 		}
 	}
-
 }
 LRESULT Engine::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -160,7 +159,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
 		//this->pLogig->MooveStar(Xpos, Ypos);
-		if (this->btnA.pushed) this->pLogig->AddElement(Xpos, Ypos, 5.0f, 5.0f);
+		if (this->btnA.pushed) this->pLogig->AddElement(Xpos, Ypos, 1.0f, 1.0f);
 	}
 	if (message == WM_COMMAND)
 	{
@@ -171,7 +170,7 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	if (message == WM_TIMER)
 	{
-		if (wParam == TIMER1) this->pLogig->TreeCalculation(this->pLogig->GetTree());
+		if (wParam == TIMER1);//this->pLogig->TreeCalculation(this->pLogig->GetTree());
 		if (wParam == TIMER_FPS) this->SetFPS();
 	}
 	return S_OK;
@@ -240,16 +239,19 @@ HRESULT Engine::CreateTarget()
 HRESULT Engine::Render()
 {
 	this->FPSiter++;
+	this->pLogig->SetQuantityZero();
+	this->pLogig->TreeCalculation(this->pLogig->GetTree());
 	HRESULT hr = this->CreateTarget();
 	if (FAILED(hr)) return hr;
 	if (!m_pPathGeometry) return S_FALSE;
 	this->pRenderTarget->BeginDraw();
 	this->pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
+	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::DarkSlateGray));
 	// Draw here
-	this->RenderTxt(200, 5, L"txt", this->FPS);
+	
 	this->RenderTreeBorder(this->pLogig->GetTree());
 	this->RenderGui();
+	this->RenderFPS();
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
 	if (hr == D2DERR_RECREATE_TARGET)
@@ -299,7 +301,15 @@ void Engine::DiscardDeviceResources()
 	}
 }
 
-
+HRESULT Engine::RenderFPS() 
+{
+	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Aqua));
+	this->pRenderTarget->FillRectangle(D2D1::Rect(50,3,70,40),this->pBrush);
+	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+	this->RenderTxt(50, 5, L"txt", this->FPS);
+	this->RenderTxt(50, 15, L"txt", this->pLogig->GetElemensQuantity());
+	return S_OK;
+}
 HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 {
 	if (this->pRenderTarget)
@@ -310,7 +320,7 @@ HRESULT Engine::RenderTxt(float x, float y, const wchar_t* txt, int Num)
 		D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + 100.0f, y + 200.0f);
 		this->pRenderTarget->DrawText(
 			buffer,        // The string to render.
-			2,    // The string's length.
+			4,    // The string's length.
 			pTxtFormat,    // The text format.
 			layoutRect,       // The region of the window where the text will be rendered.
 			this->pBrush     // The brush used to draw the text.
@@ -339,6 +349,7 @@ HRESULT Engine::RenderTreeBorder(CQuadTree* pTree)
 	}
 	else
 	{
+		
 		RECT Br = pTree->GetBorder();
 		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Coral));
 		this->pRenderTarget->DrawRectangle(D2D1::Rect(
@@ -346,15 +357,19 @@ HRESULT Engine::RenderTreeBorder(CQuadTree* pTree)
 			static_cast<int>(Br.top),
 			static_cast<int>(Br.right),
 			static_cast<int>(Br.bottom)),
-			this->pBrush, 3.0f, NULL);
+			this->pBrush, 1.0f, NULL);
 		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-		this->RenderTxt(Br.left + 4, Br.top + 4, L"txt", pTree->GetLoad());
-
+		//this->RenderTxt(Br.left + 4, Br.top + 4, L"txt", pTree->GetLoad());
+		
 		CArrow* pA = nullptr;
+
 		for (int iter = 0; iter < pTree->GetLoad(); iter++)
 		{
 			pA = pTree->GetArrow(iter);
-			this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2(pA->xPos, pA->yPos), pA->Diameter, pA->Diameter), this->pBrush, 1.0f, NULL);
+			if(pA->Mass==10) this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Red));
+			else this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+
+			this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2(pA->xPos, pA->yPos), pA->Diameter, pA->Diameter), this->pBrush, 2.0f, NULL);
 		}
 		pA = nullptr;
 

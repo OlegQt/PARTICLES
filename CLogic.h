@@ -12,10 +12,12 @@ public:
 	// SETfunctions
 	void AddElement(float, float, float, float);
 	void SetScreenDpi(float, float);
+	void SetQuantityZero();
+	
 
 	// GET functions
 	CQuadTree* GetTree();
-
+	int GetElemensQuantity();
 	// SOLVEfunctions
 	void TreeCalculation(CQuadTree*);
 private:
