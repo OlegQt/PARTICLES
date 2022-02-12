@@ -24,6 +24,7 @@ CQuadTree::~CQuadTree()
 	{
 		for (int i = 0; i < this->Load; i++)
 		{
+			delete(this->ar[0]);
 			this->ar[0] = nullptr;
 		}
 	}
@@ -60,7 +61,7 @@ bool CQuadTree::PutElementInLeaf(CArrow* pAr, bool check)
 		{
 			for (int i = 0; i < Load; i++)
 			{
-				if (CMatrix::Distance(pAr->xPos, pAr->yPos, ar[i]->xPos, ar[i]->yPos) < pAr->Diameter * 2) return false;
+				if (CMatrix::Distance(pAr->xPos, pAr->yPos, ar[i]->xPos, ar[i]->yPos) < pAr->Diameter * 3) return false;
 			}
 			ar[Load] = pAr; // Push element to array end
 			this->Load++; // Increase element number		
@@ -75,23 +76,27 @@ bool CQuadTree::PutElementInLeaf(CArrow* pAr, bool check)
 		}
 	}
 }
-bool CQuadTree::AddElement(CArrow* pAr)
+bool CQuadTree::InsertElement(CArrow* pAr)
 {
 	if (this->IsSubDevided())
 	{
-		if (this->leaf[0]->AddElement(pAr)) return true;
-		if (this->leaf[1]->AddElement(pAr)) return true;
-		if (this->leaf[2]->AddElement(pAr)) return true;
-		if (this->leaf[3]->AddElement(pAr))	return true;
+		if (this->leaf[0]->InsertElement(pAr)) return true;
+		if (this->leaf[1]->InsertElement(pAr)) return true;
+		if (this->leaf[2]->InsertElement(pAr)) return true;
+		if (this->leaf[3]->InsertElement(pAr))	return true;
 	}
 	else
 	{
-		if (this->Load < 4) this->PutElementInLeaf(pAr, true);
+		if (this->Load < 4) return this->PutElementInLeaf(pAr, true);
 		else
 		{
-			if (!this->Subdivide()) return false;
-			this->PutElementInLeaf(pAr, true);
+			if (!this->Subdivide())
+			{
+				//MessageBox(NULL, L"can`t subdivide", L"", NULL);
+				return false; // if grid mesh is to low
+			}
 			this->TransferAlltoLeafs(true);
+			return this->PutElementInLeaf(pAr, true);
 		}
 		return false;
 	}
@@ -107,27 +112,21 @@ bool CQuadTree::RelocateElement(CArrow* pAr)
 	}
 	else
 	{
-		if (this->Load < 4) this->PutElementInLeaf(pAr, false);
+		if (this->Load < 4) return this->PutElementInLeaf(pAr, false);
 		else
 		{
-			if (this->Subdivide())
+			if (!this->Subdivide())
 			{
-				this->RelocateElement(pAr);
-				// Transfer all elements to this children leafs
-				for (int i = 0; i < Load; i++)
-				{
-					this->RelocateElement(this->ar[i]); // Add element to children leaf
-					this->ar[i] = nullptr; // Remoove element from this node
-				}
-				this->Load = 0;
+				//MessageBox(NULL, L"can`t subdivide", L"", NULL);
+				return false; // if grid mesh is to low
 			}
-			else
+			else 
 			{
-				//MessageBeep(10);
-				return false;
+
+				this->TransferAlltoLeafs(true);
+				return this->PutElementInLeaf(pAr, true);
 			}
 		}
-		return false;
 	}
 }
 void CQuadTree::RemoveElement(short num)
@@ -176,7 +175,11 @@ bool CQuadTree::CheckTreeLeaf(CQuadTree* parent)
 			//parent->AddElement(pA);
 			this->RemoveElement(static_cast<short>(i));
 			if (parent->RelocateElement(pA)) return true;
-			//else MessageBeep(10);
+			else
+			{
+				//MessageBeep(10);
+				//parent->RelocateElement(pA);
+			}
 		}
 	}
 	return true;
@@ -200,6 +203,7 @@ bool CQuadTree::MergeLeafs()
 	{
 		for (int i = 0; i < 4; i++)
 		{
+			delete(this->leaf[i]);
 			this->leaf[i] = nullptr;
 		}
 		return true;
@@ -216,7 +220,7 @@ bool CQuadTree::Subdivide()
 	RECT halfBorder{ 0,0,0,0 };
 	long hW = (border.right - border.left) / 2;
 	long hH = (border.bottom - border.top) / 2;
-	if (hW < 4) return false;
+	if (hW < 6) return false;
 	else {
 		// TOP LEFT
 		halfBorder.left = border.left;

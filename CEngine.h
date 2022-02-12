@@ -50,6 +50,7 @@ private:
 	HRESULT RenderGui();
 	HRESULT RenderFPS();
 	HRESULT RenderTreeBorder(CQuadTree*);
+	HRESULT RenderCollusionsGeometry();
 	void DiscardDeviceResources();
 
 	CLogic* pLogig;

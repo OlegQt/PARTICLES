@@ -3,6 +3,7 @@ CLogic::CLogic()
 {
 	this->QTree = new CQuadTree();
 	this->num = 0;
+	this->LMpushed = false;
 }
 CLogic::~CLogic()
 {
@@ -11,14 +12,13 @@ CLogic::~CLogic()
 
 void CLogic::AddElement(float xA, float yA, float xB, float yB)
 {
-
-	//tatic const double fraction = 1.0 / (static_cast<double>(RAND_MAX) + 1.0);
-	// Равномерно распределяем рандомное число в нашем диапазоне
-	//return static_cast<int>(rand() * fraction * (max - min + 1) + min);
-	srand(this->GetElemensQuantity());
-	float Vx = static_cast<float>(rand()) / RAND_MAX * 0.04f;
-	float Vy = static_cast<float>(rand()) / RAND_MAX * 0.04f;
-	this->QTree->AddElement(new CArrow(xA, yA, Vx, Vy));
+	//int r = ((double)rand() / RAND_MAX) * (range_max - range_min) + range_min;
+	float Vx = (static_cast<float>(rand()) / RAND_MAX) * SPEED_MAX * 2 - SPEED_MAX;
+	float Vy = (static_cast<float>(rand()) / RAND_MAX) * SPEED_MAX * 2 - SPEED_MAX;
+	if (!this->QTree->InsertElement(new CArrow(xA, yA, Vx, Vy, DIAMETER)))
+	{
+		//MessageBox(NULL, L"can`t add element", L"", NULL);
+	}
 }
 void CLogic::SetScreenDpi(float w, float h)
 {
@@ -103,24 +103,23 @@ void CLogic::TreeCalculation(CQuadTree* pT)
 				}
 			}
 			// Check neibours
-			for (int l = i+1; l < pT->GetLoad(); l++)
+			for (int l = i + 1; l < pT->GetLoad(); l++)
 			{
 				pB = pT->GetArrow(l);
 				if (CMatrix::Distance(pA->xPos, pA->yPos, pB->xPos, pB->yPos) < pA->Diameter + pB->Diameter)
 				{
-					pA->Mass = 10;
-					pB->Mass = 10;
-				}
-
-				else
-				{
-					pA->Mass = 0;
-					pB->Mass = 0;
+					//pA->Mass = 10;
+					//pB->Mass = 10;
+					this->collusion.push_back(new CArrow(pA->xPos, pA->yPos, pB->xPos, pB->yPos,pA->Diameter));
+					//pA->Vx = 0;
+					//pA->Vy = 0;
+					//pB->Vx = 0;
+					//pB->Vy = 0;
 				}
 			}
 
 		}
-		
+
 		// Chek if Some elements get out from node
 		pT->CheckTreeLeaf(this->QTree);
 		num += pT->GetLoad();

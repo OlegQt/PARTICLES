@@ -144,22 +144,35 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(NULL);
 		return 0;
 	}
+	if (message == WM_LBUTTONUP)
+	{
+		this->pLogig->LMpushed = false;
+	}
 	if (message == WM_LBUTTONDOWN)
 	{
-		// Достаем координаты щелчка
 		float Xpos, Ypos;
 		Xpos = static_cast<float>LOWORD(lParam);
 		Ypos = static_cast<float>HIWORD(lParam);
-		this->pLogig->AddElement(Xpos, Ypos, 0.3f, 0.6f);
+		this->pLogig->LMpushed = true;
+	}
+	if (message == WM_RBUTTONDOWN)
+	{
+		float Xpos, Ypos;
+		Xpos = static_cast<float>LOWORD(lParam);
+		Ypos = static_cast<float>HIWORD(lParam);
+		this->pLogig->AddElement(Xpos, Ypos, 0.0f, 0.0f);
 	}
 	if (message == WM_MOUSEMOVE)
 	{
-		// Достаем координаты щелчка
-		float Xpos, Ypos;
-		Xpos = static_cast<float>LOWORD(lParam);
-		Ypos = static_cast<float>HIWORD(lParam);
-		//this->pLogig->MooveStar(Xpos, Ypos);
-		if (this->btnA.pushed) this->pLogig->AddElement(Xpos, Ypos, 1.0f, 1.0f);
+		
+		if (true)
+		{
+			float Xpos, Ypos;
+			Xpos = static_cast<float>LOWORD(lParam);// Get x position
+			Ypos = static_cast<float>HIWORD(lParam);// Get y position
+			this->pLogig->xPos = Xpos;
+			this->pLogig->yPos = Ypos;
+		}
 	}
 	if (message == WM_COMMAND)
 	{
@@ -170,7 +183,13 @@ LRESULT Engine::Procedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	if (message == WM_TIMER)
 	{
-		if (wParam == TIMER1);//this->pLogig->TreeCalculation(this->pLogig->GetTree());
+		if (wParam == TIMER1)
+		{
+			if (this->pLogig->LMpushed)
+			{
+				pLogig->AddElement(pLogig->xPos, pLogig->yPos, 0.0f, 0.0f);
+			}
+		}
 		if (wParam == TIMER_FPS) this->SetFPS();
 	}
 	return S_OK;
@@ -248,10 +267,11 @@ HRESULT Engine::Render()
 	this->pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 	this->pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::DarkSlateGray));
 	// Draw here
-	
+
 	this->RenderTreeBorder(this->pLogig->GetTree());
 	this->RenderGui();
 	this->RenderFPS();
+	this->RenderCollusionsGeometry();
 	// up to this end
 	hr = this->pRenderTarget->EndDraw();
 	if (hr == D2DERR_RECREATE_TARGET)
@@ -301,10 +321,10 @@ void Engine::DiscardDeviceResources()
 	}
 }
 
-HRESULT Engine::RenderFPS() 
+HRESULT Engine::RenderFPS()
 {
 	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Aqua));
-	this->pRenderTarget->FillRectangle(D2D1::Rect(50,3,70,40),this->pBrush);
+	this->pRenderTarget->FillRectangle(D2D1::Rect(50, 3, 70, 40), this->pBrush);
 	this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
 	this->RenderTxt(50, 5, L"txt", this->FPS);
 	this->RenderTxt(50, 15, L"txt", this->pLogig->GetElemensQuantity());
@@ -349,31 +369,49 @@ HRESULT Engine::RenderTreeBorder(CQuadTree* pTree)
 	}
 	else
 	{
-		
-		RECT Br = pTree->GetBorder();
-		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Coral));
-		this->pRenderTarget->DrawRectangle(D2D1::Rect(
-			static_cast<int>(Br.left),
-			static_cast<int>(Br.top),
-			static_cast<int>(Br.right),
-			static_cast<int>(Br.bottom)),
-			this->pBrush, 1.0f, NULL);
-		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-		//this->RenderTxt(Br.left + 4, Br.top + 4, L"txt", pTree->GetLoad());
-		
+		if (this->btnA.pushed)
+		{
+			RECT Br = pTree->GetBorder();
+			this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Coral));
+			this->pRenderTarget->DrawRectangle(D2D1::Rect(
+				static_cast<int>(Br.left),
+				static_cast<int>(Br.top),
+				static_cast<int>(Br.right),
+				static_cast<int>(Br.bottom)),
+				this->pBrush, 1.0f, NULL);
+			this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+			//this->RenderTxt(Br.left + 4, Br.top + 4, L"txt", pTree->GetLoad());
+		}
+
 		CArrow* pA = nullptr;
 
 		for (int iter = 0; iter < pTree->GetLoad(); iter++)
 		{
 			pA = pTree->GetArrow(iter);
-			if(pA->Mass==10) this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Red));
+			if (pA->Mass == 10) this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Red));
 			else this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
 
-			this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2(pA->xPos, pA->yPos), pA->Diameter, pA->Diameter), this->pBrush, 2.0f, NULL);
+			this->pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2(pA->xPos, pA->yPos), pA->Diameter, pA->Diameter), this->pBrush, 1.0f, NULL);
+			this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
+			this->pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2(pA->xPos, pA->yPos), pA->Diameter, pA->Diameter), this->pBrush);
 		}
 		pA = nullptr;
 
 	}
+	return S_OK;
+}
+HRESULT Engine::RenderCollusionsGeometry()
+{
+	CArrow* pAr = nullptr;
+	for (int i = 0; i < this->pLogig->collusion.size(); i++)
+	{
+		pAr = pLogig->collusion.at(i);
+		this->pBrush->SetColor(D2D1::ColorF(D2D1::ColorF::Red));
+		this->pRenderTarget->DrawLine(D2D1::Point2(pAr->xPos,pAr->yPos), D2D1::Point2(pAr->Vx, pAr->Vy),pBrush,4*pAr->Diameter,NULL);
+		delete(pAr);
+		pAr = nullptr;
+	}
+	this->pLogig->collusion.clear();
 	return S_OK;
 }
 void Engine::SetFPS()

@@ -11,8 +11,7 @@
 class CArrow
 {
 public:
-	CArrow(float,float,float);
-	CArrow(float, float, float,float);
+	CArrow(float, float, float,float,float);
 	CArrow();
 	~CArrow();
 
